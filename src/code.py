@@ -5,7 +5,7 @@ from src.errors import (
     InvalidArgumentsLength, InvalidOpcodeName, OperandPrefixError,
     OperandValueError, ParseError, PartialParseError, SizeLimitExceeded,
 )
-from src.instruction import Instruction, Mode, ModeType
+from src.instruction import Instruction, Mode
 
 
 class Line(NamedTuple):
@@ -57,7 +57,7 @@ class Parser:
             return instruction
 
     @staticmethod
-    def operand(operand: str) -> tuple[ModeType, int]:
+    def operand(operand: str) -> tuple[Mode, int]:
         if operand[0] == "#":
             return Mode.IMMEDIATE, try_int(operand[1:])
         elif operand[0] == "@":
@@ -70,12 +70,9 @@ class Parser:
     def parse_instruction(self, line: Line):
         params = [p.strip(",") for p in line.content.split() if p]
         opcode = self.command(params[0])
-        print(params)
-        print(opcode)
         operands = []
         for param in params[1:]:
             operands.extend(self.operand(param))
-            print(operands)
         return opcode(*operands)
 
     def parse(self):

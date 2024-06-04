@@ -49,6 +49,10 @@ class SizeLimitExceeded(RedcodeError):
     pass
 
 
+class RedcodeOutOfMemoryError(RedcodeError):
+    pass
+
+
 class RedcodeRuntimeError(RedcodeError):
     pass
 
@@ -57,11 +61,19 @@ class BadOpcode(RedcodeRuntimeError):
     pass
 
 
-class BadModeForA(RedcodeRuntimeError):
+class BadMode(RedcodeRuntimeError):
     pass
 
 
-class BadModeForB(RedcodeRuntimeError):
+class BadModeForA(BadMode):
+    pass
+
+
+class BadModeForB(BadMode):
+    pass
+
+
+class DatError(RedcodeRuntimeError):
     pass
 
 
