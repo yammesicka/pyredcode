@@ -215,9 +215,12 @@ class Memory:
 
     def __setitem__(self, address: int, value: int | Instruction):
         try:
-            self._data[int(address) % len(self)] = value
+            index = int(address) % len(self)
+            self._data[index] = value
         except IndexError:
             raise RedcodeIndexError(f"Address {address} is out of bounds")
+        else:
+            self._free -= Sector(index, index + 1)
 
     def __len__(self):
         return len(self._data)

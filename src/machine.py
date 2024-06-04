@@ -10,7 +10,7 @@ from src.process import Process
 class Machine:
     def __init__(self, memory_size: int = config.MEMORY_SIZE):
         self.memory = Memory(memory_size)
-        self.processes = []
+        self.processes: list[Process] = []
 
     def __getitem__(self, address: int) -> int | Instruction:
         return self.memory[address]
@@ -38,3 +38,7 @@ class Machine:
         text = path.read_text()
         code = self._create_code_from_text(text)
         self._spawn_process(code)
+
+    def run(self):
+        for process in self.processes:
+            process.tick()

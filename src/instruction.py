@@ -47,9 +47,9 @@ class Instruction:
         self.name = self.__class__.__name__.upper()
         self.opcode = self.OPCODE
         self.mode_a = mode_a
-        self.a = int(a)
+        self.a = self._to_signed_12_bit(a)
         self.mode_b = mode_b
-        self.b = int(b)
+        self.b = self._to_signed_12_bit(b)
 
     def __init_subclass__(cls) -> None:
         cls._classes[cls.__name__.upper()] = cls
@@ -84,6 +84,15 @@ class Instruction:
         b = integer & ((1 << 12) - 1)          # 12 bits
         return cls._opcodes[opcode](mode_a, a, mode_b, b)
 
+    @staticmethod
+    def _to_signed_12_bit(n: int) -> int:
+        n = int(n) % (1 << 12)
+
+        if n >= (1 << 11):
+            n -= (1 << 12)
+
+        return n
+
     def run(self, ip: int, memory: "Memory") -> int:
         raise NotImplementedError(
             f"`run` not implemented for {self.__class__.__name__}"
@@ -96,12 +105,20 @@ class Instruction:
         return f"{opcode_name} {a}, {b}"
 
     def __int__(self):
+        mask_12bit = (2 << 11) - 1
+        neg_offset = 0x1000
+
+        a = (neg_offset + self.a) if self.a < 0 else self.a
+        b = (neg_offset + self.b) if self.b < 0 else self.b
+        a = a & mask_12bit
+        b = b & mask_12bit
+
         return (
             (self.opcode << 28) |
             (self.mode_a << 26) |
             (self.mode_b << 24) |
-            (self.a << 12) |
-            (self.b)
+            (a << 12) |
+            b
         )
 
     def __eq__(self, other: object) -> bool:

@@ -3,7 +3,7 @@ import pytest
 from src import memory
 from src.errors import RedcodeOutOfMemoryError
 from src.memory import Memory, Sector, Sectors
-from src.instruction import Dat, Instruction, Mode, Mov
+from src.instruction import Dat, Instruction, Jmp, Mode, Mov
 
 
 @pytest.mark.parametrize("size", [256, 512, 1024])
@@ -15,6 +15,65 @@ def test_init_right_size(size):
 def test_init_initial_values():
     mem = Memory(1024)
     assert all(x == Dat.of(0) for x in mem)
+
+
+def test_allocate_returns_index():
+    mem = Memory(1)
+    allocated_address = mem.allocate([Dat.of(1)])
+    assert allocated_address == 0
+
+
+def test_allocate_2_returns_index():
+    mem = Memory(2)
+    allocated_address = mem.allocate([Dat.of(1), Dat.of(2)])
+    assert allocated_address == 0
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        [Dat.of(5)],
+        [Dat.of(5), Dat.of(2)],
+        [Dat.of(1), Dat.of(2), Dat.of(3)],
+    ],
+)
+def test_allocate_dats_creates_right_code_in_memory(code):
+    mem = Memory(len(code))
+    allocated_address = mem.allocate(code)
+    assert allocated_address == 0
+    for i in range(len(code)):
+        assert mem[i] == code[i]
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        [Mov(Mode.IMMEDIATE, 0, Mode.RELATIVE, 1)],
+        [Jmp(Mode.RELATIVE, 1)],
+    ],
+)
+def test_allocate_creates_right_instruction_in_memory(code):
+    mem = Memory(len(code))
+    allocated_address = mem.allocate(code)
+    assert allocated_address == 0
+    for i in range(len(code)):
+        assert mem[i] == code[i]
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        [Mov(Mode.IMMEDIATE, 0, Mode.RELATIVE, 1), Jmp(Mode.RELATIVE, 1)],
+        [Jmp(Mode.RELATIVE, 1), Mov(Mode.IMMEDIATE, 0, Mode.RELATIVE, 1)],
+        [Mov(Mode.IMMEDIATE, 0, Mode.RELATIVE, 1), Mov(Mode.IMMEDIATE, 0, Mode.RELATIVE, 1)],
+    ],
+)
+def test_allocate_creates_right_code_in_memory(code):
+    mem = Memory(len(code))
+    allocated_address = mem.allocate(code)
+    assert allocated_address == 0
+    for i in range(len(code)):
+        assert mem[i] == code[i]
 
 
 def test_allocate_program_effects_free_sections():
