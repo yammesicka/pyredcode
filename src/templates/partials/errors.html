@@ -1,0 +1,13 @@
+<div class="w-full mt-4 bg-gray-900 shadow-lg rounded-lg p-6 border-l-4 border-blue-500" role="alert">
+    <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-blue-500 mr-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="font-semibold text-blue-400 text-lg">Attention needed:</p>
+    </div>
+    <ul class="list-disc ml-12 text-blue-300 mt-2">
+        {% for error in errors %}
+        <li>Error {{ loop.index }}: {{error}} at line {{ error.line }}.</li>
+        {% endfor %}
+    </ul>
+</div>

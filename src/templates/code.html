@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Wars Code Upload</title>
+    <script src="{{ url_for('static', filename='tailwind.js') }} "></script>
+    <script src="{{ url_for('static', filename='htmx.js') }} "></script>
+    <style>
+        textarea#code {
+            font-family: 'Courier New', monospace;
+            background-color: #1e1e1e;
+            color: #dcdcaa;
+            border: none;
+            padding: 12px;
+        }
+        textarea#code::placeholder {
+            color: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-800 text-white font-sans h-screen flex flex-col">
+    <div class="container mx-auto p-5 flex flex-1 flex-col items-center justify-center">
+        <h1 class="text-4xl text-center font-bold mb-4">Upload Your Code</h1>
+        <div id="response" class="flex mb-2 gap-2"></div>
+        <form action="/code/send" method="POST" hx-post="/code/send" hx-target="#response" hx-swap="innerHTML" hx-redirect="/battle"  class="w-full max-w-4xl flex flex-col items-center justify-center space-y-8">
+            <div class="w-full">
+                <label for="player-name" class="block mb-3 text-lg font-medium text-gray-300">Player Name:</label>
+                <input type="text" id="player-name" name="player-name" placeholder="Enter your player name" class="block w-full text-lg text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 placeholder-opacity-50 p-4" required>
+            </div>
+            <div class="w-full">
+                <label for="code" class="block mb-3 text-lg font-medium text-gray-300">Paste your code here:</label>
+                <textarea id="code" name="code" rows="12" class="block p-4 w-full text-lg text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Enter your code..." required></textarea>
+            </div>
+            <div class="w-full">
+                <label class="block mb-3 text-lg font-medium text-gray-300">Or drag and drop a file:</label>
+                <div class="flex justify-center items-center w-full h-40 bg-gray-600 rounded-lg border-2 border-gray-500 border-dashed cursor-pointer" drag-drop>
+                    <span class="text-lg text-gray-300">Drag 'n' drop your file here, or click to select a file</span>
+                    <input id="file-upload" type="file" name="file-upload" class="absolute opacity-0 w-full h-40 cursor-pointer">
+                </div>
+            </div>
+            <button type="submit" class="px-8 py-4 bg-blue-500 text-lg text-white font-medium leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Upload Code</button>
+        </form>
+    </div>
+
+    <script>
+    window.addEventListener("load", (e) => {
+      const dropArea = document.querySelector('[drag-drop]');
+      const fileInput = document.getElementById('file-upload');
+      const codeTextArea = document.getElementById('code');
+
+      dropArea.addEventListener('dragover', (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+      });
+
+      dropArea.addEventListener('drop', (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+        const fileList = event.dataTransfer.files;
+        if (fileList.length > 0) {
+          readFile(fileList[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', (event) => {
+        const fileList = event.target.files;
+        if (fileList.length > 0) {
+          readFile(fileList[0]);
+        }
+      });
+
+      function readFile(file) {
+        if (!isValidFile(file)) {
+          alert("Invalid file type. Only '.red' or '.txt' files are allowed.");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          codeTextArea.value = event.target.result;
+        };
+        reader.readAsText(file);
+      }
+
+      function isValidFile(file) {
+          const allowedExtensions = /(\.txt|\.red)$/i;
+          const hasNoExtension = file.name.split('.').length === 1;
+          return allowedExtensions.test(file.name) || hasNoExtension;
+      }
+    });
+    </script>
+  </body>
+</html>
