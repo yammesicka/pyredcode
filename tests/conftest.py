@@ -1,6 +1,6 @@
 import pytest
 
-from src.instruction import Add, Jmp, Mode, Mov
+from redcode.instruction import Add, Jmp, Mode, Mov
 
 
 @pytest.fixture

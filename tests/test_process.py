@@ -1,9 +1,9 @@
 import pytest
 
-from src.errors import DatError, RedcodeRuntimeError
-from src.instruction import Add, Dat, Jmp, Mode, Mov
-from src.memory import Memory
-from src.process import Process
+from redcode.errors import DatError, RedcodeRuntimeError
+from redcode.instruction import Add, Dat, Jmp, Mode, Mov
+from redcode.memory import Memory
+from redcode.process import Process
 
 
 def test_process_ticks_without_crashing(code):

@@ -1,9 +1,9 @@
 import pytest
 
-from src import memory
-from src.errors import RedcodeOutOfMemoryError
-from src.memory import Memory, Sector, Sectors
-from src.instruction import Dat, Instruction, Jmp, Mode, Mov
+from redcode import memory
+from redcode.errors import RedcodeOutOfMemoryError
+from redcode.memory import Memory, Sector, Sectors
+from redcode.instruction import Dat, Instruction, Jmp, Mode, Mov
 
 
 @pytest.mark.parametrize("size", [256, 512, 1024])

@@ -1,7 +1,7 @@
 import pytest
 
-from src.errors import BadMode, RedcodeRuntimeError
-from src.instruction import (
+from redcode.errors import BadMode, RedcodeRuntimeError
+from redcode.instruction import (
     Add,
     Cmp,
     Dat,
@@ -13,7 +13,7 @@ from src.instruction import (
     Mov,
     Sub,
 )
-from src.memory import Memory
+from redcode.memory import Memory
 
 
 def test_cast_int_zero():

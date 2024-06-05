@@ -1,8 +1,8 @@
 import pytest
 
-from src import config
-from src.instruction import Dat, Instruction
-from src.machine import Machine
+from redcode import config
+from redcode.instruction import Dat, Instruction
+from redcode.machine import Machine
 
 
 @pytest.mark.parametrize("memory_size", [0, -5])

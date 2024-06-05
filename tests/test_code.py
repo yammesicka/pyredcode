@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pytest
 
-from src.config import MAX_PROGRAM_SIZE
-from src.code import Parser, Validator
-from src.errors import SizeLimitExceeded
-from src.instruction import Add, Mode, Mov, Jmp
+from redcode.config import MAX_PROGRAM_SIZE
+from redcode.code import Parser, Validator
+from redcode.errors import SizeLimitExceeded
+from redcode.instruction import Add, Mode, Mov, Jmp
 
 
 code_dir = Path(__file__).parent / "codes"
