@@ -3,10 +3,15 @@ from copy import deepcopy
 from collections.abc import Iterator
 from dataclasses import dataclass
 import secrets
-from typing import Optional
+from typing import Optional, TypeVar
 
-from redcode.errors import BadMode, RedcodeIndexError, RedcodeOutOfMemoryError
+from redcode.errors import (
+    BadMode, RedcodeIndexError, RedcodeOutOfMemoryError, RedcodeRuntimeError
+)
 from redcode.instruction import Dat, Instruction, Mode
+
+
+T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -205,6 +210,14 @@ class Memory:
 
     def safely_read_int(self, address: int) -> int:
         return int(self._data[address % len(self)])
+
+    def safely_read_instruction(
+        self, address: int, default: T = None,
+    ) -> Instruction | T:
+        try:
+            return Instruction.from_int(self[address])
+        except RedcodeRuntimeError:
+            return default
 
     def __getitem__(self, address: int) -> Instruction:
         try:

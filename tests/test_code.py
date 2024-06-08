@@ -1,10 +1,11 @@
+from os import waitid
 from pathlib import Path
 
 import pytest
 
 from redcode.config import MAX_PROGRAM_SIZE
 from redcode.code import Parser, Validator
-from redcode.errors import SizeLimitExceeded
+from redcode.errors import EmptyCode, SizeLimitExceeded
 from redcode.instruction import Add, Mode, Mov, Jmp
 
 
@@ -24,6 +25,13 @@ def test_parsable_codes():
         code = codefile.read_text()
         run = Validator(code)
         assert run.is_valid(), (codefile, run.errors)
+
+
+def test_validator_empty_code():
+    code = code_dir.joinpath("bad_only_comments.red").read_text()
+    run = Validator(code)
+    assert not run.is_valid()
+    assert type(run.errors[0]) is EmptyCode
 
 
 def test_validator_right_lines():

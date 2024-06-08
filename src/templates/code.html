@@ -1,95 +1,120 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Core Wars Code Upload</title>
-    <script src="{{ url_for('static', filename='tailwind.js') }} "></script>
-    <script src="{{ url_for('static', filename='htmx.js') }} "></script>
-    <style>
-        textarea#code {
-            font-family: 'Courier New', monospace;
-            background-color: #1e1e1e;
-            color: #dcdcaa;
-            border: none;
-            padding: 12px;
-        }
-        textarea#code::placeholder {
-            color: #555;
-        }
-    </style>
-</head>
-<body class="bg-gray-800 text-white font-sans h-screen flex flex-col">
+{% extends "base.html" %}
+{% block title %}Core Wars Code Upload{% endblock %}
+
+{% block styles %}
+<script src="{{ url_for('static', filename='tailwind.js') }} "></script>
+{% endblock %}
+
+{% block content %}
+<body class="bg-gray-800 text-white font-sans h-screen flex flex-col" hx-ext="response-targets">
+  <div class="flex flex-row">
     <div class="container mx-auto p-5 flex flex-1 flex-col items-center justify-center">
-        <h1 class="text-4xl text-center font-bold mb-4">Upload Your Code</h1>
-        <div id="response" class="flex mb-2 gap-2"></div>
-        <form action="/code/send" method="POST" hx-post="/code/send" hx-target="#response" hx-swap="innerHTML" hx-redirect="/battle"  class="w-full max-w-4xl flex flex-col items-center justify-center space-y-8">
-            <div class="w-full">
-                <label for="player-name" class="block mb-3 text-lg font-medium text-gray-300">Player Name:</label>
-                <input type="text" id="player-name" name="player-name" placeholder="Enter your player name" class="block w-full text-lg text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 placeholder-opacity-50 p-4" required>
+      <h1 class="text-4xl text-center font-bold mb-4">Upload Your Code</h1>
+      <form action="/code/send" method="POST" hx-post="/code/send" hx-target-422="#errors" hx-swap="innerHTML" hx-redirect="/battle" class="w-full max-w-4xl flex flex-col items-center justify-center space-y-8">
+        <div class="w-full flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-6">
+          <label for="player-name" class="w-full md:w-auto block mb-3 text-lg font-medium text-gray-300">Player Name:</label>
+          <div class="flex-1 relative">
+            <input type="text" id="player-name" name="player-name" placeholder="Enter your player name" class="block w-full px-4 py-3 font-mono text-lg rounded-lg border-2 border-gray-600 focus:border-blue-500 bg-gray-800 placeholder-gray-500 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-md transition duration-150 ease-in-out" required>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M563-491q73-54 114-118.5T718-738q0-32-10.5-47T679-800q-47 0-83 79.5T560-541q0 14 .5 26.5T563-491ZM120-120v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80ZM136-280l-56-56 64-64-64-64 56-56 64 64 64-64 56 56-64 64 64 64-56 56-64-64-64 64Zm482-40q-30 0-55-11.5T520-369q-25 14-51.5 25T414-322l-28-75q28-10 53.5-21.5T489-443q-5-22-7.5-48t-2.5-56q0-144 57-238.5T679-880q52 0 85 38.5T797-734q0 86-54.5 170T591-413q7 7 14.5 10.5T621-399q26 0 60.5-33t62.5-87l73 34q-7 17-11 41t1 42q10-5 23.5-17t27.5-30l63 49q-26 36-60 58t-63 22q-21 0-37.5-12.5T733-371q-28 25-57 38t-58 13Z"/></svg>
             </div>
-            <div class="w-full">
-                <label for="code" class="block mb-3 text-lg font-medium text-gray-300">Paste your code here:</label>
-                <textarea id="code" name="code" rows="12" class="block p-4 w-full text-lg text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Enter your code..." required></textarea>
-            </div>
-            <div class="w-full">
-                <label class="block mb-3 text-lg font-medium text-gray-300">Or drag and drop a file:</label>
-                <div class="flex justify-center items-center w-full h-40 bg-gray-600 rounded-lg border-2 border-gray-500 border-dashed cursor-pointer" drag-drop>
-                    <span class="text-lg text-gray-300">Drag 'n' drop your file here, or click to select a file</span>
-                    <input id="file-upload" type="file" name="file-upload" class="absolute opacity-0 w-full h-40 cursor-pointer">
-                </div>
-            </div>
-            <button type="submit" class="px-8 py-4 bg-blue-500 text-lg text-white font-medium leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Upload Code</button>
-        </form>
+          </div>
+        </div>
+        <div class="w-full">
+          <label for="code" class="block mb-3 text-lg font-medium text-gray-300">Paste your code here:</label>
+          <textarea id="code" name="code" rows="12" class="block p-4 w-full font-mono text-lg rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 border-2 border-slate-700 bg-slate-800 placeholder-gray-400 text-slate-300 shadow-lg" placeholder="Enter your code..." required></textarea>
+          <div id="errors" class="flex mb-6 gap-2 w-full"></div>
+        </div>
+        <div class="w-full">
+          <label class="block mb-3 text-lg font-medium text-gray-300">Or drag and drop a file:</label>
+          <div class="flex justify-center items-center w-full h-40 bg-gray-600 rounded-lg border-2 border-slate-500 border-dashed cursor-pointer relative">
+            <span class="text-lg text-gray-300">Drag 'n' drop your file here, or click to select a file</span>
+            <input id="file-upload" type="file" name="file-upload" class="absolute opacity-0 w-full h-40 cursor-pointer" drag-drop>
+          </div>
+        </div>
+        <div class="w-full flex justify-center space-x-4">
+          <button type="button" 
+            hx-post="/test_run"
+            hx-include="#player-name, #code"
+            hx-target="#run-demo"
+            hx-target-422="#errors"
+            class="px-8 py-4 bg-emerald-700 text-lg text-white font-medium leading-tight uppercase rounded shadow-md hover:bg-emerald-800 hover:shadow-lg focus:bg-emerald-800 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-emerald-900 active:shadow-lg transition duration-150 ease-in-out">
+            Test Run
+          </button>
+          <button 
+            type="submit"
+            class="px-8 py-4 bg-indigo-600 text-lg text-white font-medium leading-tight uppercase rounded shadow-md hover:bg-indigo-700 hover:shadow-lg focus:bg-indigo-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-indigo-800 active:shadow-lg transition duration-150 ease-in-out"
+            hx-disable
+          >
+            Upload Code
+          </button>
+        </div>
+      </form>
     </div>
+    <div id="run-demo" class="hidden translate-x-full transform transition-transform ease-out duration-700 w-full flex-1 bg-slate-900 p-4 text-white overflow-auto"></div>
+  </div>
+</body>
+{% endblock %}
 
-    <script>
-    window.addEventListener("load", (e) => {
-      const dropArea = document.querySelector('[drag-drop]');
-      const fileInput = document.getElementById('file-upload');
-      const codeTextArea = document.getElementById('code');
+{% block scripts %}
+<script src="{{ url_for('static', filename='htmx.js') }} "></script>
+<script src="{{ url_for('static', filename='htmx-response.js') }} "></script>
+<script>
+window.addEventListener("load", (e) => {
+  const dropArea = document.querySelector('[drag-drop]');
+  const fileInput = document.getElementById('file-upload');
+  const codeTextArea = document.getElementById('code');
+  const playgroundArea = document.getElementById('run-demo');
 
-      dropArea.addEventListener('dragover', (event) => {
-        event.stopPropagation();
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'copy';
-      });
+  dropArea.addEventListener('dragover', (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+  });
 
-      dropArea.addEventListener('drop', (event) => {
-        event.stopPropagation();
-        event.preventDefault();
-        const fileList = event.dataTransfer.files;
-        if (fileList.length > 0) {
-          readFile(fileList[0]);
-        }
-      });
+  dropArea.addEventListener('drop', (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    const fileList = event.dataTransfer.files;
+    if (fileList.length > 0) {
+      readFile(fileList[0]);
+    }
+  });
 
-      fileInput.addEventListener('change', (event) => {
-        const fileList = event.target.files;
-        if (fileList.length > 0) {
-          readFile(fileList[0]);
-        }
-      });
+  fileInput.addEventListener('change', (event) => {
+    const fileList = event.target.files;
+    if (fileList.length > 0) {
+      readFile(fileList[0]);
+    }
+  });
 
-      function readFile(file) {
-        if (!isValidFile(file)) {
-          alert("Invalid file type. Only '.red' or '.txt' files are allowed.");
-          return;
-        }
+  document.body.addEventListener('htmx:beforeSwap', (event) => {
+    if (event.detail.xhr.status === 200) {
+      playgroundArea.classList.remove('hidden');
+      setTimeout(() => {
+        playgroundArea.classList.remove('translate-x-full');
+      }, 20);
+    }
+  });
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          codeTextArea.value = event.target.result;
-        };
-        reader.readAsText(file);
-      }
+  function readFile(file) {
+    if (!isValidFile(file)) {
+      alert("Invalid file type. Only '.red' or '.txt' files are allowed.");
+      return;
+    }
 
-      function isValidFile(file) {
-          const allowedExtensions = /(\.txt|\.red)$/i;
-          const hasNoExtension = file.name.split('.').length === 1;
-          return allowedExtensions.test(file.name) || hasNoExtension;
-      }
-    });
-    </script>
-  </body>
-</html>
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      codeTextArea.value = event.target.result;
+    };
+    reader.readAsText(file);
+  }
+
+  function isValidFile(file) {
+    const allowedExtensions = /(\.txt|\.red)$/i;
+    const hasNoExtension = file.name.split('.').length === 1;
+    return allowedExtensions.test(file.name) || hasNoExtension;
+  }
+});
+</script>
+{% endblock %}

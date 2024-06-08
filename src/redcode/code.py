@@ -2,7 +2,7 @@ from typing import NamedTuple
 
 from redcode.config import MAX_PROGRAM_SIZE, COMMENT_SIGN
 from redcode.errors import (
-    InvalidArgumentsLength, InvalidOpcodeName, OperandPrefixError,
+    EmptyCode, InvalidArgumentsLength, InvalidOpcodeName, OperandPrefixError,
     OperandValueError, ParseError, PartialParseError, SizeLimitExceeded,
 )
 from redcode.instruction import Instruction, Mode
@@ -132,6 +132,10 @@ class Validator:
 
     def _run(self):
         lines = Parser.remove_comments(self.code)
+        if ''.join(lines).strip() == "":
+            self._exceptions.append(EmptyCode("Empty code"))
+            return None
+
         for i, line in enumerate(lines, 1):
             if not line:
                 continue

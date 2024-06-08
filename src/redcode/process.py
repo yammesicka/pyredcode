@@ -1,6 +1,15 @@
+from dataclasses import dataclass
 from redcode.errors import RedcodeRuntimeError
 from redcode.instruction import Dat, Instruction
 from redcode.memory import Memory
+
+
+@dataclass(frozen=True, slots=True)
+class Diff:
+    pid: int
+    ip: int
+    index: int | None
+    value: int | None
 
 
 class Process:
@@ -25,16 +34,18 @@ class Process:
     def is_alive(self) -> bool:
         return self._alive
 
-    def tick(self):
+    def tick(self) -> Diff | None:
         instruction = self._ensure_instruction(self._memory[self._ip])
         if not self._alive:
             return
 
         try:
-            self._ip = instruction.run(self._ip, self._memory)
+            self._ip, mem, value = instruction.run(self._ip, self._memory)
         except RedcodeRuntimeError as e:
             self._reason = str(e)
             self.die()
+        else:
+            return Diff(self._id, self._ip, mem, value)
 
     def _ensure_instruction(
         self, instruction: int | Instruction,

@@ -14,12 +14,12 @@ def test_set_bad_machine_memory_init(memory_size):
 @pytest.mark.parametrize("memory_size", [10, 1024, 2048])
 def test_allocation(memory_size):
     machine = Machine(memory_size)
-    assert len(machine) == memory_size
+    assert len(machine.memory) == memory_size
 
 
 def test_default_allocation():
     machine = Machine()
-    assert len(machine) == config.MEMORY_SIZE
+    assert len(machine.memory) == config.MEMORY_SIZE
 
 
 def test_read_address_after_init():

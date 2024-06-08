@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import TYPE_CHECKING, NewType
+from typing import TYPE_CHECKING, NamedTuple, NewType
 
 from redcode.errors import BadOpcode, BadModeForA, BadModeForB, DatError
 
@@ -10,6 +10,12 @@ if TYPE_CHECKING:
 
 ModeType = NewType("ModeType", int)
 ArgType = NewType("ArgType", int)
+
+
+class InstructionResult(NamedTuple):
+    new_ip: int
+    mem_index: int | None
+    mem_value: int | None
 
 
 class Mode(IntEnum):
@@ -93,7 +99,7 @@ class Instruction:
 
         return n
 
-    def run(self, ip: int, memory: "Memory") -> int:
+    def run(self, ip: int, memory: "Memory") -> InstructionResult:
         raise NotImplementedError(
             f"`run` not implemented for {self.__class__.__name__}"
         )
@@ -164,10 +170,6 @@ class SingleArgInstruction(Instruction):
         super().__init__(mode_a, a, mode_b, b)
 
 
-# TODO: I don't like the fact that the instruction know about
-#       the memory object. Refactor the instructions to return:
-#       Action([list_of_memory_changes], new_ip)
-
 class Dat(SingleArgInstruction):
     """Data instruction, don't run it, you'll die"""
     OPCODE = 0
@@ -177,7 +179,7 @@ class Dat(SingleArgInstruction):
     def of(cls, value: int) -> "Dat":
         return Dat(Mode.IMMEDIATE, value)
 
-    def run(self, ip: int, memory: "Memory") -> int:
+    def run(self, ip: int, memory: "Memory") -> InstructionResult:
         raise DatError("DAT instruction encountered")
 
 
@@ -186,11 +188,12 @@ class Mov(Instruction):
     OPCODE = 1
     ARGUMENTS = [Arguments.A, Arguments.B]
 
-    def run(self, ip: int, memory: "Memory") -> int:
+    def run(self, ip: int, memory: "Memory") -> InstructionResult:
         op_a = memory.value(self.mode_a, self.a, ip)
         addr_b = memory.address(self.mode_b, self.b, ip)
         memory[addr_b] = op_a
-        return (ip + 1) % len(memory)
+        jump_to = (ip + 1) % len(memory)
+        return InstructionResult(jump_to, addr_b, int(op_a))
 
 
 class Add(Instruction):
@@ -198,12 +201,13 @@ class Add(Instruction):
     OPCODE = 2
     ARGUMENTS = [Arguments.A, Arguments.B]
 
-    def run(self, ip: int, memory: "Memory") -> int:
+    def run(self, ip: int, memory: "Memory") -> InstructionResult:
         op_a = memory.value(self.mode_a, self.a, ip)
         op_b = memory.value(self.mode_b, self.b, ip)
         address_b = memory.address(self.mode_b, self.b, ip)
-        memory[address_b] = int(op_a) + int(op_b)
-        return (ip + 1) % len(memory)
+        memory[address_b] = answer = int(op_a) + int(op_b)
+        jump_to = (ip + 1) % len(memory)
+        return InstructionResult(jump_to, address_b, answer)
 
 
 class Sub(Instruction):
@@ -211,12 +215,13 @@ class Sub(Instruction):
     OPCODE = 3
     ARGUMENTS = [Arguments.A, Arguments.B]
 
-    def run(self, ip: int, memory: "Memory") -> int:
+    def run(self, ip: int, memory: "Memory") -> InstructionResult:
         op_a = memory.value(self.mode_a, self.a, ip)
         op_b = memory.value(self.mode_b, self.b, ip)
         address_b = memory.address(self.mode_b, self.b, ip)
-        memory[address_b] = int(op_b) - int(op_a)
-        return (ip + 1) % len(memory)
+        memory[address_b] = answer = int(op_b) - int(op_a)
+        jump_to = (ip + 1) % len(memory)
+        return InstructionResult(jump_to, address_b, answer)
 
 
 class Jmp(SingleArgInstruction):
@@ -224,8 +229,9 @@ class Jmp(SingleArgInstruction):
     OPCODE = 4
     ARGUMENTS = [Arguments.B]
 
-    def run(self, ip: int, memory: "Memory") -> int:
-        return int(memory.value(self.mode_b, self.b, ip)) % len(memory)
+    def run(self, ip: int, memory: "Memory") -> InstructionResult:
+        jump_to = int(memory.value(self.mode_b, self.b, ip)) % len(memory)
+        return InstructionResult(jump_to, None, None)
 
 
 class Jmz(Instruction):
@@ -233,12 +239,11 @@ class Jmz(Instruction):
     OPCODE = 5
     ARGUMENTS = [Arguments.A, Arguments.B]
 
-    def run(self, ip: int, memory: "Memory") -> int:
+    def run(self, ip: int, memory: "Memory") -> InstructionResult:
         op_a = memory.value(self.mode_a, self.a, ip)
         op_b = memory.value(self.mode_b, self.b, ip)
-        if op_a == 0:
-            return int(op_b) % len(memory)
-        return (ip + 1) % len(memory)
+        jump_to = (int(op_b) if op_a == 0 else ip + 1) % len(memory)
+        return InstructionResult(jump_to, None, None)
 
 
 class Djz(Instruction):
@@ -246,15 +251,14 @@ class Djz(Instruction):
     OPCODE = 6
     ARGUMENTS = [Arguments.A, Arguments.B]
 
-    def run(self, ip: int, memory: "Memory") -> int:
+    def run(self, ip: int, memory: "Memory") -> InstructionResult:
         address_a = memory.address(self.mode_a, self.a, ip)
         op_a = memory.value(self.mode_a, self.a, ip)
         op_b = memory.value(self.mode_b, self.b, ip)
         answer = int(op_a) - 1
         memory[address_a] = answer
-        if answer == 0:
-            return int(op_b) % len(memory)
-        return (ip + 1) % len(memory)
+        jump_to = (int(op_b) if answer == 0 else ip + 1) % len(memory)
+        return InstructionResult(jump_to, address_a, answer)
 
 
 class Cmp(Instruction):
@@ -262,9 +266,11 @@ class Cmp(Instruction):
     OPCODE = 7
     ARGUMENTS = [Arguments.A, Arguments.B]
 
-    def run(self, ip: int, memory: "Memory") -> int:
+    def run(self, ip: int, memory: "Memory") -> InstructionResult:
         op_a = memory.value(self.mode_a, self.a, ip)
         op_b = memory.value(self.mode_b, self.b, ip)
-        if op_a == op_b:
-            return (ip + 2) % len(memory)
-        return (ip + 1) % len(memory)
+
+        add_to_ip = 2 if op_a == op_b else 1
+        new_ip = (ip + add_to_ip) % len(memory)
+
+        return InstructionResult(new_ip, None, None)

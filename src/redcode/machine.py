@@ -1,10 +1,11 @@
+from collections.abc import Iterator
 from pathlib import Path
 
 from redcode import config
 from redcode.instruction import Instruction
 from redcode.code import Parser, Validator
 from redcode.memory import Memory
-from redcode.process import Process
+from redcode.process import Diff, Process
 
 
 class Machine:
@@ -18,8 +19,9 @@ class Machine:
     def __setitem__(self, address: int, value: Instruction) -> None:
         self.memory[address] = value
 
-    def __len__(self):
-        return len(self.memory)
+    def reset(self):
+        self.memory = Memory(len(self.memory))
+        self.processes.clear()
 
     def _spawn_process(
         self, program: list[Instruction], player_name: str,
@@ -36,6 +38,10 @@ class Machine:
         program.parse()
         return program.instructions
 
+    @property
+    def halted(self) -> bool:
+        return sum(int(process.is_alive) for process in self.processes) == 1
+
     def load_code(self, code: str, player_name: str) -> None:
         program = self._create_code_from_text(code)
         self._spawn_process(program, player_name)
@@ -45,6 +51,12 @@ class Machine:
         text = path.read_text()
         self.load_code(text, player_name)
 
-    def turn(self):
-        for process in self.processes:
-            process.tick()
+    def turn(self) -> Iterator[Diff | None]:
+        if not self.halted:
+            for process in self.processes:
+                yield process.tick()
+
+    def run(self, turns: int = config.MAX_TICKS) -> Iterator[Diff | None]:
+        for _ in range(turns):
+            if not self.halted:
+                yield from self.turn()

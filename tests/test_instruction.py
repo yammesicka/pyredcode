@@ -14,6 +14,7 @@ from redcode.instruction import (
     Sub,
 )
 from redcode.memory import Memory
+from src.redcode.instruction import InstructionResult
 
 
 def test_cast_int_zero():
@@ -105,7 +106,10 @@ def test_mov_run():
     memory = Memory(4)
     memory[0] = Mov(Mode.IMMEDIATE, 1, Mode.RELATIVE, 2)
     memory[1] = Jmp(Mode.IMMEDIATE, 0)
-    assert memory[0].run(0, memory) == 1
+    assert (
+        memory[0].run(0, memory) ==
+        InstructionResult(new_ip=1, mem_index=2, mem_value=1)
+    )
     assert memory[0] == Mov(Mode.IMMEDIATE, 1, Mode.RELATIVE, 2)
     assert memory[1] == Jmp(Mode.IMMEDIATE, 0)
     assert memory[2] == 1
@@ -116,7 +120,7 @@ def test_mov_run_with_instruction():
     add = Add(Mode.IMMEDIATE, 1, Mode.RELATIVE, 0)
     memory[0] = Mov(Mode.RELATIVE, 1, Mode.RELATIVE, 2)
     memory[1] = add
-    assert memory[0].run(0, memory) == 1
+    assert memory[0].run(0, memory) == InstructionResult(1, 2, int(add))
     assert memory[2] == add and type(memory[2]) is Add
 
 
@@ -126,34 +130,37 @@ def test_add_run_on_just_a_number():
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
     memory[3] = Dat.of(0)
-    assert memory[0].run(0, memory) == 1
+    assert memory[0].run(0, memory) == InstructionResult(1, 2, 3)
     assert memory[2] == 3
 
 
 def test_add_run_on_address():
     memory = Memory(4)
-    memory[0] = Add(Mode.IMMEDIATE, 1, Mode.RELATIVE, 0)
+    add_1 = Add(Mode.IMMEDIATE, 1, Mode.RELATIVE, 0)
+    memory[0] = add_1
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 1
+    assert memory[0].run(0, memory) == InstructionResult(1, 0, int(add_1) + 1)
 
 
 def test_add_run_on_address_and_run_the_address():
     memory = Memory(4)
-    memory[0] = Add(Mode.IMMEDIATE, 1, Mode.RELATIVE, 0)
+    add_1 = Add(Mode.IMMEDIATE, 1, Mode.RELATIVE, 0)
+    memory[0] = add_1
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 1
-    assert memory[0].run(0, memory) == 1
+    assert memory[0].run(0, memory) == InstructionResult(1, 0, int(add_1) + 1)
+    assert memory[0].run(0, memory) == InstructionResult(1, 1, 2)
     assert memory[1] == Dat.of(2)
 
 
 def test_simple_sub():
     memory = Memory(4)
-    memory[0] = Sub(Mode.IMMEDIATE, 1, Mode.RELATIVE, 1)
+    sub_1 = Sub(Mode.IMMEDIATE, 1, Mode.RELATIVE, 1)
+    memory[0] = sub_1
     memory[1] = Dat.of(2)
     memory[2] = Dat.of(1)
-    assert memory[0].run(0, memory) == 1
+    assert memory[0].run(0, memory) == InstructionResult(1, 1, 1)
     assert memory[1] == 1
 
 
@@ -170,7 +177,9 @@ def test_sub_on_some_numbers(place, decrement, expected):
     for i in range(4):
         memory[i] = Dat.of(i + 1)
     memory[place] = Sub(Mode.IMMEDIATE, decrement, Mode.RELATIVE, 1)
-    assert memory[place].run(place, memory) == place + 1
+    result = memory[place].run(place, memory)
+    expected_ir = InstructionResult(place + 1, place + 1, expected)
+    assert result == expected_ir
     assert memory[place + 1] == expected
 
 
@@ -179,7 +188,7 @@ def test_simple_jmp():
     memory[0] = Jmp(Mode.IMMEDIATE, 2)
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 2
+    assert memory[0].run(0, memory) == InstructionResult(2, None, None)
 
 
 def test_out_of_bound_jmp():
@@ -187,7 +196,7 @@ def test_out_of_bound_jmp():
     memory[0] = Jmp(Mode.IMMEDIATE, 100)
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 0
+    assert memory[0].run(0, memory) == InstructionResult(0, None, None)
 
 
 def test_jmz():
@@ -195,7 +204,7 @@ def test_jmz():
     memory[0] = Jmz(Mode.IMMEDIATE, 0, Mode.IMMEDIATE, 2)
     memory[1] = Dat.of(0)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 2
+    assert memory[0].run(0, memory) == InstructionResult(2, None, None)
 
 
 def test_jmz_not_zero():
@@ -203,7 +212,7 @@ def test_jmz_not_zero():
     memory[0] = Jmz(Mode.IMMEDIATE, 1, Mode.IMMEDIATE, 2)
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 1
+    assert memory[0].run(0, memory) == InstructionResult(1, None, None)
 
 
 def teset_djz():
@@ -211,7 +220,7 @@ def teset_djz():
     memory[0] = Djz(Mode.IMMEDIATE, 1, Mode.IMMEDIATE, 2)
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 1
+    assert memory[0].run(0, memory) == InstructionResult(1, 0, 0)
 
 
 def test_djz_zero():
@@ -219,7 +228,7 @@ def test_djz_zero():
     memory[0] = Djz(Mode.RELATIVE, 1, Mode.IMMEDIATE, 2)
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 2
+    assert memory[0].run(0, memory) == InstructionResult(2, 1, 0)
 
 
 def test_djz_not_zero():
@@ -227,7 +236,7 @@ def test_djz_not_zero():
     memory[0] = Djz(Mode.RELATIVE, 1, Mode.IMMEDIATE, 2)
     memory[1] = Dat.of(3)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 1
+    assert memory[0].run(0, memory) == InstructionResult(1, 1, 2)
 
 
 def test_cmp_not_equal():
@@ -235,7 +244,7 @@ def test_cmp_not_equal():
     memory[0] = Cmp(Mode.IMMEDIATE, 1, Mode.IMMEDIATE, 2)
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 1
+    assert memory[0].run(0, memory) == InstructionResult(1, None, None)
 
 
 def test_cmp_equal():
@@ -243,7 +252,7 @@ def test_cmp_equal():
     memory[0] = Cmp(Mode.IMMEDIATE, 1, Mode.IMMEDIATE, 1)
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 2
+    assert memory[0].run(0, memory) == InstructionResult(2, None, None)
 
 
 def test_cmp_equal_relative():
@@ -251,4 +260,4 @@ def test_cmp_equal_relative():
     memory[0] = Cmp(Mode.RELATIVE, 1, Mode.RELATIVE, 2)
     memory[1] = Dat.of(2)
     memory[2] = Dat.of(2)
-    assert memory[0].run(0, memory) == 2
+    assert memory[0].run(0, memory) == InstructionResult(2, None, None)
