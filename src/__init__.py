@@ -1,8 +1,10 @@
 from http import HTTPStatus
 
-from flask import Flask, Response, redirect, render_template, request, url_for
+from flask import (
+    Flask, Response, jsonify, redirect, render_template, request, url_for,
+)
 
-from redcode import config, errors, machine
+from redcode import config, machine
 
 
 __all__ = ['create_app']
@@ -12,26 +14,17 @@ app = create_app = Flask(__name__)
 INSTANCE = machine.Machine()
 
 
-@app.route('/battle')
-def battle(instance: machine.Machine = INSTANCE):
+def render_battle(instance: machine.Machine):
+    instance.run()
+    assert instance.start_state is not None
+
     return render_template(
         'battle.html',
-        processes=instance.processes,
-        memory=instance.memory,
-        memory_size=config.MEMORY_SIZE,
+        processes=instance.start_state.processes,
+        memory=instance.start_state.memory,
+        memory_size=len(instance.memory),
+        history=instance.json_history,
     )
-
-
-@app.route('/tick')
-def tick():
-    INSTANCE.turn()
-    return redirect(url_for('battle'))
-
-
-@app.route('/reset')
-def reset():
-    INSTANCE.reset()
-    return redirect(url_for('battle'))
 
 
 def bad_code_sent(e: ExceptionGroup):
@@ -42,23 +35,29 @@ def bad_code_sent(e: ExceptionGroup):
     )
 
 
-@app.route('/test_run', methods=['POST'])
+@app.route('/battle')
+def battle(instance: machine.Machine = INSTANCE):
+    return render_battle(instance)
+
+
+@app.route('/reset')
+def reset(instance: machine.Machine = INSTANCE):
+    instance.reset()
+    return redirect(url_for('battle'))
+
+
+@app.route('/test', methods=['POST'])
 def test_run():
     player_name = request.form['player-name'] or 'Test'
     code = request.form['code']
 
-    instance = machine.Machine(memory_size=128)
+    instance = machine.Machine(memory_size=128, allow_single_process=True)
     try:
         instance.load_code(code, player_name)
     except ExceptionGroup as e:
         return bad_code_sent(e)
 
-    return render_template(
-        'battle.html',
-        processes=instance.processes,
-        memory=instance.memory,
-        memory_size=len(instance.memory),
-    )
+    return render_battle(instance)
 
 
 @app.route('/code')
@@ -79,16 +78,6 @@ def code_send(instance: machine.Machine = INSTANCE):
     resp.headers['HX-Redirect'] = '/battle'
     return resp
 
-
-def memory_safe_read(index: None = None, instance: machine.Machine = INSTANCE):
-    print(f"Reading {index=}")
-    try:
-        return instance.memory[index]
-    except errors.RedcodeRuntimeError:
-        return "???"
-
-
-app.jinja_env.filters['memory_safe_read'] = memory_safe_read
 
 if __name__ == '__main__':
     app.run(debug=True)

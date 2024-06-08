@@ -1,4 +1,6 @@
-from collections.abc import Iterator
+import copy
+import dataclasses
+import json
 from pathlib import Path
 
 from redcode import config
@@ -9,9 +11,17 @@ from redcode.process import Diff, Process
 
 
 class Machine:
-    def __init__(self, memory_size: int = config.MEMORY_SIZE):
+    def __init__(
+        self,
+        memory_size: int = config.MEMORY_SIZE,
+        allow_single_process: bool = False,
+    ):
         self.memory = Memory(memory_size)
         self.processes: list[Process] = []
+        self.start_state: Machine | None = None
+        self._history: list[Diff | None] = []
+        self._ticks = 0
+        self._allow_single_process = allow_single_process
 
     def __getitem__(self, address: int) -> int | Instruction:
         return self.memory[address]
@@ -22,6 +32,9 @@ class Machine:
     def reset(self):
         self.memory = Memory(len(self.memory))
         self.processes.clear()
+        self.start_state = None
+        self._history.clear()
+        self._ticks = 0
 
     def _spawn_process(
         self, program: list[Instruction], player_name: str,
@@ -39,8 +52,15 @@ class Machine:
         return program.instructions
 
     @property
+    def _processes_alive(self) -> int:
+        return sum(process.is_alive for process in self.processes)
+
+    @property
     def halted(self) -> bool:
-        return sum(int(process.is_alive) for process in self.processes) == 1
+        if self._allow_single_process and self._processes_alive >= 1:
+            return False
+
+        return self._processes_alive < 2
 
     def load_code(self, code: str, player_name: str) -> None:
         program = self._create_code_from_text(code)
@@ -51,12 +71,27 @@ class Machine:
         text = path.read_text()
         self.load_code(text, player_name)
 
-    def turn(self) -> Iterator[Diff | None]:
-        if not self.halted:
-            for process in self.processes:
-                yield process.tick()
+    @property
+    def history(self) -> list[Diff | None]:
+        return self._history
 
-    def run(self, turns: int = config.MAX_TICKS) -> Iterator[Diff | None]:
-        for _ in range(turns):
-            if not self.halted:
-                yield from self.turn()
+    @property
+    def json_history(self) -> str:
+        return json.dumps(
+            [act and dataclasses.asdict(act) for act in self._history]
+        )
+
+    def round(self):
+        if self.halted:
+            return
+
+        for process in self.processes:
+            self._history.append(process.tick())
+            self._ticks += 1
+
+    def run(self, max_ticks: int = config.MAX_TICKS):
+        if self.start_state is None:
+            self.start_state = copy.deepcopy(self)
+
+        while self._ticks <= max_ticks and not self.halted:
+            self.round()

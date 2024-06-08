@@ -34,7 +34,7 @@
         </div>
         <div class="w-full flex justify-center space-x-4">
           <button type="button" 
-            hx-post="/test_run"
+            hx-post="/test"
             hx-include="#player-name, #code"
             hx-target="#run-demo"
             hx-target-422="#errors"
@@ -65,6 +65,7 @@ window.addEventListener("load", (e) => {
   const fileInput = document.getElementById('file-upload');
   const codeTextArea = document.getElementById('code');
   const playgroundArea = document.getElementById('run-demo');
+  const errorsArea = document.getElementById('errors');
 
   dropArea.addEventListener('dragover', (event) => {
     event.stopPropagation();
@@ -90,6 +91,7 @@ window.addEventListener("load", (e) => {
 
   document.body.addEventListener('htmx:beforeSwap', (event) => {
     if (event.detail.xhr.status === 200) {
+      errorsArea.classList.add('hidden');
       playgroundArea.classList.remove('hidden');
       setTimeout(() => {
         playgroundArea.classList.remove('translate-x-full');

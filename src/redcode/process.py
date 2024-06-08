@@ -9,7 +9,7 @@ class Diff:
     pid: int
     ip: int
     index: int | None
-    value: int | None
+    value: str | None
 
 
 class Process:
@@ -45,6 +45,7 @@ class Process:
             self._reason = str(e)
             self.die()
         else:
+            value = str(self._memory.safely_read_instruction(mem, "???"))
             return Diff(self._id, self._ip, mem, value)
 
     def _ensure_instruction(

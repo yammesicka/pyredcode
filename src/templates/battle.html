@@ -20,5 +20,12 @@
         {% endfor %}
       </div>
     </div>
+    <script>
+      if (Object.is("moves", undefined)) {
+        let moves;
+      }
+      moves = {{ history | safe }};
+      console.log(moves);
+    </script>
   </body>
 {% endblock %}

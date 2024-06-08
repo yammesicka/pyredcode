@@ -205,17 +205,17 @@ class Memory:
             )
         return free_sectors
 
-    def _get_debug_int(self, address: int) -> int | None:
-        return int(self._data[address % len(self)])
-
     def safely_read_int(self, address: int) -> int:
         return int(self._data[address % len(self)])
 
     def safely_read_instruction(
-        self, address: int, default: T = None,
+        self, address: int | None, default: T = None,
     ) -> Instruction | T:
+        if not isinstance(address, int):
+            return default
+
         try:
-            return Instruction.from_int(self[address])
+            return self[address]
         except RedcodeRuntimeError:
             return default
 
