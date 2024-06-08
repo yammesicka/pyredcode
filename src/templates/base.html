@@ -9,13 +9,9 @@
     {% block styles %}
     {% endblock styles %}
   </head>
-  <body>
-    <main>
-      {% block content %}
-      {% endblock content %}
-    </main>
+  {% block content %}
+  {% endblock content %}
 
-    {% block scripts %}
-    {% endblock scripts %}
-  </body>
+  {% block scripts %}
+  {% endblock scripts %}
 </html>

@@ -7,12 +7,13 @@
 {% endblock %}
 {% block content %}
   <body class="bg-gray-900 text-gray-100 font-mono">
-    <div class="container mx-auto px-4 py-5">
-      <h1 class="text-3xl text-center font-bold mb-6 text-white">Memory Battle Arena</h1>
-      <div class="memory-grid grid w-full h-[65vh] grid-cols-[repeat(auto-fit,minmax(30px,1fr))] gap-0.5">
+    <div class="container mx-auto px-4 py-5 flex flex-col gap-4">
+      <h1 class="text-3xl text-center font-bold text-white">Memory Battle Arena</h1>
+      <div class="memory-grid grid w-full h-[60vh] grid-cols-[repeat(auto-fit,minmax(30px,1fr))] gap-0.5">
         {% include 'partials/memory.html' %}
       </div>
-      <div class="flex flex-nowrap justify-around w-full mt-4 h-25">
+      {% include 'partials/controls.html' %}
+      <div class="flex mt-3 flex-nowrap justify-around w-full">
         {% for process in processes %}
           {% set process_index = loop.index %}
           {% include 'partials/player.html' %}
