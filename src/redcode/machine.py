@@ -4,8 +4,9 @@ import json
 from pathlib import Path
 
 from redcode import config
-from redcode.instruction import Instruction
 from redcode.code import Parser, Validator
+from redcode.errors import MachineAlreadyRunning
+from redcode.instruction import Instruction
 from redcode.memory import Memory
 from redcode.process import Diff, Process
 
@@ -19,6 +20,7 @@ class Machine:
         self.memory = Memory(memory_size)
         self.processes: list[Process] = []
         self.start_state: Machine | None = None
+        self.start_map: list[int | None] = [None] * len(self.memory)
         self._history: list[Diff | None] = []
         self._ticks = 0
         self._allow_single_process = allow_single_process
@@ -39,8 +41,11 @@ class Machine:
     def _spawn_process(
         self, program: list[Instruction], player_name: str,
     ) -> None:
-        code_start = self.memory.allocate(program, override=False)
-        self.processes.append(Process(code_start, self.memory, player_name))
+        code_starts = self.memory.allocate(program, override=False)
+        code_ends = code_starts + len(program)
+        process = Process(code_starts, self.memory, player_name)
+        self.start_map[code_starts:code_ends] = [process._id] * len(program)
+        self.processes.append(process)
 
     def _create_code_from_text(self, code: str) -> list[Instruction]:
         validator = Validator(code)
@@ -90,6 +95,8 @@ class Machine:
             self._ticks += 1
 
     def run(self, max_ticks: int = config.MAX_TICKS):
+        if self._ticks > 0:
+            raise MachineAlreadyRunning()
         if self.start_state is None:
             self.start_state = copy.deepcopy(self)
 

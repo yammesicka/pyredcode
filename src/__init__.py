@@ -1,17 +1,18 @@
 from http import HTTPStatus
+import json
 
 from flask import (
-    Flask, Response, jsonify, redirect, render_template, request, url_for,
+    Flask, Response, redirect, render_template, request, url_for,
 )
 
-from redcode import config, machine
+from redcode import machine
 
 
 __all__ = ['create_app']
 
 
 app = create_app = Flask(__name__)
-INSTANCE = machine.Machine()
+INSTANCE = machine.Machine(allow_single_process=True)
 
 
 def render_battle(instance: machine.Machine):
@@ -21,8 +22,11 @@ def render_battle(instance: machine.Machine):
     return render_template(
         'battle.html',
         processes=instance.start_state.processes,
+        player_count=len(instance.start_state.processes),
         memory=instance.start_state.memory,
+        memory_json=instance.start_state.memory.as_json(),
         memory_size=len(instance.memory),
+        start_map=json.dumps(instance.start_map),
         history=instance.json_history,
     )
 
@@ -75,7 +79,7 @@ def code_send(instance: machine.Machine = INSTANCE):
         return bad_code_sent(e)
 
     resp = Response()
-    resp.headers['HX-Redirect'] = '/battle'
+    resp.headers['HX-Redirect'] = '/wait'
     return resp
 
 

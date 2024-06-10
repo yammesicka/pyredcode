@@ -28,7 +28,7 @@ class Process:
         self._memory = memory
         self._id = self.COUNTER if id is None else id
         self._parent_id = parent_id
-        self.COUNTER += 1
+        self.__class__.COUNTER += 1
 
     @property
     def is_alive(self) -> bool:

@@ -2,6 +2,10 @@ class RedcodeError(Exception):
     pass
 
 
+class MachineAlreadyRunning(RedcodeError):
+    pass
+
+
 class ParseError(RedcodeError):
     def __init__(
         self, msg: str, line_index: int | None = None, line: str | None = None,

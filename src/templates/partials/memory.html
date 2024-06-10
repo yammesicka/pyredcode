@@ -1,5 +1,7 @@
         {% for i in range(0, memory_size) %}
-        <div class="memory-cell bg-gray-700 rounded hover:bg-gray-600 transition duration-150 ease-in-out
+        <div id="cell-{{ i }}" class="memory-cell bg-gray-700 rounded hover:bg-gray-600 transition duration-150 ease-in-out
           {% if memory.safely_read_int(i) != 0 %}bg-red-300{% endif %}">
         </div>
         {% endfor %}
+        <script>
+        </script>

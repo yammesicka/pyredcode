@@ -1,12 +1,21 @@
 {% extends 'base.html' %}
 
 {% block title %}Memory Battle{% endblock %}
-{% block styles %}
-  {{ super() }}
+{% block head %}
+{{ super() }}
   <script src="{{ url_for('static', filename='tailwind.js') }}"></script>
 {% endblock %}
 {% block content %}
   <body class="bg-gray-900 text-gray-100 font-mono">
+    <script>
+      // Yeah, we define them as global to prevent errors
+      // when we load the file multiple times using HTMX.
+      playerCount = {{ player_count }};
+      startMap = {{ start_map | safe }};
+      memory = {{ memory_json | safe }};
+      moves = {{ history | safe }};
+      colors = {{ colors | safe }};
+    </script>
     <div class="container mx-auto px-4 py-5 flex flex-col gap-4">
       <h1 class="text-3xl text-center font-bold text-white">Memory Battle Arena</h1>
       <div class="memory-grid grid w-full h-[60vh] grid-cols-[repeat(auto-fit,minmax(30px,1fr))] gap-0.5">
@@ -15,17 +24,10 @@
       {% include 'partials/controls.html' %}
       <div class="flex mt-3 flex-nowrap justify-around w-full">
         {% for process in processes %}
-          {% set process_index = loop.index %}
+          {% set process_index = loop.index - 1 %}
           {% include 'partials/player.html' %}
         {% endfor %}
       </div>
     </div>
-    <script>
-      if (Object.is("moves", undefined)) {
-        let moves;
-      }
-      moves = {{ history | safe }};
-      console.log(moves);
-    </script>
   </body>
 {% endblock %}

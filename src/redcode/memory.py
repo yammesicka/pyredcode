@@ -2,6 +2,7 @@ import bisect
 from copy import deepcopy
 from collections.abc import Iterator
 from dataclasses import dataclass
+import json
 import secrets
 from typing import Optional, TypeVar
 
@@ -218,6 +219,12 @@ class Memory:
             return self[address]
         except RedcodeRuntimeError:
             return default
+
+    def as_json(self) -> str:
+        return json.dumps([
+            str(self.safely_read_instruction(i, "???"))
+            for i in range(len(self))
+        ])
 
     def __getitem__(self, address: int) -> Instruction:
         try:
