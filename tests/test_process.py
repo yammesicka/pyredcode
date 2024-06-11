@@ -9,7 +9,7 @@ from redcode.process import Process
 def test_process_ticks_without_crashing(code):
     m = Memory(64)
     code_start = m.allocate(code)
-    process = Process(code_start, m)
+    process = Process(0, code_start, m)
     process.tick()
 
 
@@ -18,7 +18,7 @@ def test_process_tick_performs_mov():
     code_start = m.allocate([
         Mov(Mode.IMMEDIATE, 50, Mode.RELATIVE, 1),
     ])
-    process = Process(code_start, m)
+    process = Process(0, code_start, m)
     process.tick()
     assert m[code_start + 1] == 50
 
@@ -30,7 +30,7 @@ def test_process_tick_performs_signed_mov():
     code_start = m.allocate([
         Mov(Mode.IMMEDIATE, -1, Mode.RELATIVE, 1),
     ])
-    process = Process(code_start, m)
+    process = Process(0, code_start, m)
     process.tick()
     assert m.safely_read_int(code_start + 1) == -1
 
@@ -42,7 +42,7 @@ def test_mov_dat_to_rel_1_tick_goes_kaboom():
     code_start = m.allocate([
         Mov(Mode.IMMEDIATE, 1, Mode.RELATIVE, 1),
     ])
-    process = Process(code_start, m)
+    process = Process(0, code_start, m)
     process.tick()
     assert process.is_alive
     process.tick()
@@ -55,7 +55,7 @@ def test_process_imp():
     m[1] = Dat.of(20)
     imp = Mov(Mode.RELATIVE, 0, Mode.RELATIVE, 1)
     code_start = m.allocate([imp])
-    process = Process(code_start, m)
+    process = Process(0, code_start, m)
     for _ in range(20):
         assert process.is_alive
         process.tick()

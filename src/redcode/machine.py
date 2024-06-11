@@ -43,7 +43,12 @@ class Machine:
     ) -> None:
         code_starts = self.memory.allocate(program, override=False)
         code_ends = code_starts + len(program)
-        process = Process(code_starts, self.memory, player_name)
+        process = Process(
+            len(self.processes),
+            code_starts,
+            self.memory,
+            player_name,
+        )
         self.start_map[code_starts:code_ends] = [process._id] * len(program)
         self.processes.append(process)
 

@@ -13,22 +13,19 @@ class Diff:
 
 
 class Process:
-    COUNTER = 0
-
     def __init__(
-        self, code_start: int, memory: Memory, name: str | None = None,
-        alive: bool = True, id: int | None = None,
+        self, proc_id: int, code_start: int, memory: Memory,
+        name: str | None = None, alive: bool = True,
         parent_id: int | None = None,
     ):
-        self.name = name or f"Process {self.COUNTER}"
+        self.name = name or f"Process {proc_id or 'Unnamed'}"
         self._code_start = code_start
         self._ip = code_start  # Instruction pointer - next line to execute
         self._reason = "OK"
         self._alive = alive
         self._memory = memory
-        self._id = self.COUNTER if id is None else id
+        self._id = proc_id
         self._parent_id = parent_id
-        self.__class__.COUNTER += 1
 
     @property
     def is_alive(self) -> bool:
