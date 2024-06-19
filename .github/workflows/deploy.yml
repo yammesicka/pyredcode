@@ -1,0 +1,35 @@
+name: "Deploy"
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - "*"
+
+env:
+  GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+  SERVICE: codewars
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Build and Push Docker Image
+      run: |
+        docker build -t gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE }}:${{ github.sha }} .
+        docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE }}:${{ github.sha }}
+        
+    - name: Deploy to Cloud Run
+      uses: google-github-actions/deploy-cloudrun@v1
+      with:
+        service: ${{ env.SERVICE }}
+        image: gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE }}:${{ github.sha }}
