@@ -43,6 +43,7 @@ class Arguments:
 class Instruction:
     OPCODE = -1
     ARGUMENTS = []
+    SIZE = 2 ** 32
 
     _classes = {}
     _opcodes = {}

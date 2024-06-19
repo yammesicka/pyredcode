@@ -1,6 +1,13 @@
         {% for i in range(0, memory_size) %}
-        <div id="cell-{{ i }}" class="memory-cell bg-gray-700 rounded hover:bg-gray-600 transition duration-150 ease-in-out
-          {% if memory.safely_read_int(i) != 0 %}bg-red-300{% endif %}">
+        {% set background_player_color = "gray-700" %}
+        {%- if start_map[i] is not none -%}
+          {% set background_player_color = colors[start_map[i]] + "-300" %}
+        {%- endif -%}
+        <div id="cell-{{ i }}" class="memory-cell rounded hover:bg-gray-600 transition duration-150 ease-in-out
+          bg-{{ background_player_color }}
+          {% if i in ips %}border-{{ colors[ips.index(i)] }}-600/75 hover:border-{{ colors[ips.index(i)] }}-500/75 border-y-4{% endif %}"
+          {% if i in ips %}data-border-color="{{ colors[ips.index(i)] }}"{% endif %}
+        >
         </div>
         {% endfor %}
         <script>

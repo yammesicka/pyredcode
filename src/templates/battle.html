@@ -11,7 +11,8 @@
       // Yeah, we define them as global to prevent errors
       // when we load the file multiple times using HTMX.
       playerCount = {{ player_count }};
-      startMap = {{ start_map | safe }};
+      startMap = {{ start_map | tojson | safe }};
+      ips = {{ ips | safe }};
       memory = {{ memory_json | safe }};
       moves = {{ history | safe }};
       colors = {{ colors | safe }};

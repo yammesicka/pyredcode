@@ -1,5 +1,4 @@
 from http import HTTPStatus
-import json
 
 from flask import (
     Flask, Response, redirect, render_template, request, url_for,
@@ -13,6 +12,7 @@ __all__ = ['create_app']
 
 app = create_app = Flask(__name__)
 INSTANCE = machine.Machine(allow_single_process=True)
+UPLOADED = {}
 
 
 def render_battle(instance: machine.Machine):
@@ -26,7 +26,8 @@ def render_battle(instance: machine.Machine):
         memory=instance.start_state.memory,
         memory_json=instance.start_state.memory.as_json(),
         memory_size=len(instance.memory),
-        start_map=json.dumps(instance.start_map),
+        start_map=instance.start_map,
+        ips=instance.start_state.ips,
         history=instance.json_history,
     )
 
@@ -41,6 +42,12 @@ def bad_code_sent(e: ExceptionGroup):
 
 @app.route('/battle')
 def battle(instance: machine.Machine = INSTANCE):
+    instance = machine.Machine(allow_single_process=False)
+    for player_name, code in UPLOADED.items():
+        try:
+            instance.load_code(code, player_name)
+        except ExceptionGroup as e:
+            return bad_code_sent(e)
     return render_battle(instance)
 
 
@@ -78,6 +85,10 @@ def code_send(instance: machine.Machine = INSTANCE):
     except ExceptionGroup as e:
         return bad_code_sent(e)
 
+    if player_name in UPLOADED:
+        return f'We already have code for {player_name}', HTTPStatus.CONFLICT
+
+    UPLOADED[player_name] = code
     resp = Response()
     resp.headers['HX-Redirect'] = '/wait'
     return resp

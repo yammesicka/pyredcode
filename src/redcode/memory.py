@@ -228,7 +228,7 @@ class Memory:
 
     def __getitem__(self, address: int) -> Instruction:
         try:
-            data = int(self._data[address % len(self)])
+            data = int(self._data[address % len(self)]) % Instruction.SIZE
             return Instruction.from_int(data)  # Might fire RedcodeRuntimeError
         except IndexError:
             raise RedcodeIndexError(f"Address {address} is out of bounds")

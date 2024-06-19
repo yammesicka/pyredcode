@@ -82,6 +82,10 @@ class Machine:
         self.load_code(text, player_name)
 
     @property
+    def ips(self) -> list[int]:
+        return [process._ip for process in self.processes]
+
+    @property
     def history(self) -> list[Diff | None]:
         return self._history
 
