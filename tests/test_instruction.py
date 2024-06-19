@@ -15,6 +15,7 @@ from redcode.instruction import (
 )
 from redcode.memory import Memory
 from src.redcode.instruction import InstructionResult
+from src.redcode.machine import Machine
 
 
 def test_cast_int_zero():
@@ -185,7 +186,7 @@ def test_sub_on_some_numbers(place, decrement, expected):
 
 def test_simple_jmp():
     memory = Memory(4)
-    memory[0] = Jmp(Mode.IMMEDIATE, 2)
+    memory[0] = Jmp(Mode.RELATIVE, 2)
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
     assert memory[0].run(0, memory) == InstructionResult(2, None, None)
@@ -193,7 +194,7 @@ def test_simple_jmp():
 
 def test_out_of_bound_jmp():
     memory = Memory(4)
-    memory[0] = Jmp(Mode.IMMEDIATE, 100)
+    memory[0] = Jmp(Mode.RELATIVE, 100)
     memory[1] = Dat.of(1)
     memory[2] = Dat.of(2)
     assert memory[0].run(0, memory) == InstructionResult(0, None, None)
@@ -261,3 +262,27 @@ def test_cmp_equal_relative():
     memory[1] = Dat.of(2)
     memory[2] = Dat.of(2)
     assert memory[0].run(0, memory) == InstructionResult(2, None, None)
+
+
+def test_jmp_relative():
+    machine = Machine(4, allow_single_process=True)
+    machine.load_code("""
+        JMP 2
+        DAT #0
+        MOV #2, -1
+        JMP -3
+    """, "")
+    machine.run()
+    assert machine.memory[1] == Dat.of(2)
+
+
+def test_indirect():
+    machine = Machine(3, allow_single_process=True)
+    machine.load_code("""
+        ; Use dwarf to test indirect addressing
+        MOV #2, 5
+        MOV #8, @1
+        DAT #0     ; placeholder, will hold 5
+    """, "")
+    machine.run()
+    assert machine.memory[1] == Dat.of(8)

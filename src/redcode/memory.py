@@ -176,7 +176,7 @@ class Memory:
         elif mode == Mode.INDIRECT:
             pointer = self.address(Mode.RELATIVE, value, ip)
             address_a = (pointer + int(self[pointer])) % len(self)
-            return int(self[address_a]) % len(self)
+            return address_a
         else:
             raise BadMode(f"Unknown mode for address retrieving: {mode}")
 

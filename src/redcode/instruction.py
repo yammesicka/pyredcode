@@ -230,7 +230,7 @@ class Jmp(SingleArgInstruction):
     ARGUMENTS = [Arguments.B]
 
     def run(self, ip: int, memory: "Memory") -> InstructionResult:
-        jump_to = int(memory.value(self.mode_b, self.b, ip)) % len(memory)
+        jump_to = int(memory.address(self.mode_b, self.b, ip)) % len(memory)
         return InstructionResult(jump_to, None, None)
 
 

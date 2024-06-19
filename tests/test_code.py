@@ -1,4 +1,3 @@
-from os import waitid
 from pathlib import Path
 
 import pytest

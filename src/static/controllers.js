@@ -96,8 +96,10 @@ function loadNextInstruction(instruction) {
   updateCellIp(pid, ip);
   playerIpHistory[pid].push(ip);
 
-  memoryHistory[index].push({ player: pid, value });
-  updateCellMemValue(pid, index, value);
+  if (index !== null && index !== undefined) {
+    memoryHistory[index].push({ player: pid, value });
+    updateCellMemValue(pid, index, value);
+  }
 
   updatePlayerInstructions(pid, ip);
 }
