@@ -54,6 +54,7 @@ def battle(instance: machine.Machine = INSTANCE):
 @app.route('/reset')
 def reset(instance: machine.Machine = INSTANCE):
     instance.reset()
+    UPLOADED.clear()
     return redirect(url_for('battle'))
 
 
